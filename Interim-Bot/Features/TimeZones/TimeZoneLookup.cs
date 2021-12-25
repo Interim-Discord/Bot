@@ -856,7 +856,7 @@ public static class TimeZoneLookup
 					{
 						new("Chuuk/Truk, Yap", "tz_Pacific/Chuuk", null),
 						new("Kosrae", "tz_Pacific/Kosrae", null),
-						new("Pohnpei/Ponape	", "tz_Pacific/Pohnpei", null)
+						new("Pohnpei/Ponape", "tz_Pacific/Pohnpei", null)
 					}
 				}
 			)
