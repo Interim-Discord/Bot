@@ -5,8 +5,8 @@ namespace Interim.Features.TimeZones;
 [Serializable]
 public class TimeZoneRole
 {
-	public ulong ID { get; set;  }
-	public string WindowsTimeZoneID { get; set;  }
+	public ulong ID { get; set; }
+	public string WindowsTimeZoneID { get; set; }
 	[JsonIgnore]
 	private TimeZoneInfo? _timeZoneInfo;
 	[JsonIgnore]
@@ -24,11 +24,16 @@ public class TimeZoneRoleData
 {
 	public const string FileNameWithExtension = "role-data.json";
 
+	/// <summary>
+	/// A data structure of all chosen timezones to role IDs.
+	/// Contains duplicates of role IDs as windows time IDs are collapsed into singular roles if they are seen as identical.
+	/// </summary>
 	[JsonInclude]
 	public List<TimeZoneRole> Roles { get; set; } = new();
 
 	[JsonIgnore]
 	private Dictionary<string, TimeZoneRole>? windowsTimeZoneIdToRole;
+
 	[JsonIgnore]
 	private Dictionary<string, TimeZoneRole> WindowsTimeZoneIdToRole
 	{
@@ -41,6 +46,35 @@ public class TimeZoneRoleData
 			foreach (TimeZoneRole role in Roles)
 				windowsTimeZoneIdToRole.Add(role.WindowsTimeZoneID, role);
 			return windowsTimeZoneIdToRole;
+		}
+	}
+
+	[JsonIgnore]
+	private Dictionary<ulong, TimeZoneRole>? roleToWindowsTimeZoneId;
+
+	/// <summary>
+	/// A collapsed version of the Roles structure that only uses one windows time ID per role.
+	/// </summary>
+	[JsonIgnore]
+	public Dictionary<ulong, TimeZoneRole> RoleToWindowsTimeZoneId
+	{
+		get
+		{
+			if (roleToWindowsTimeZoneId != null)
+				return roleToWindowsTimeZoneId;
+
+			RebuildRoleToWindowsTimeZoneId();
+			return roleToWindowsTimeZoneId!;
+		}
+	}
+
+	private void RebuildRoleToWindowsTimeZoneId()
+	{
+		roleToWindowsTimeZoneId = new Dictionary<ulong, TimeZoneRole>();
+		foreach (TimeZoneRole role in Roles)
+		{
+			if (roleToWindowsTimeZoneId.ContainsKey(role.ID)) continue;
+			roleToWindowsTimeZoneId.Add(role.ID, role);
 		}
 	}
 
@@ -101,6 +135,8 @@ public class TimeZoneRoleData
 			// Discord role was not found, update data structure.
 			WindowsTimeZoneIdToRole.Remove(windowsTimeZoneID);
 			Roles.Remove(role);
+			// Cannot update directly, because role to windows ID is a collapsed version of "Roles"
+			RebuildRoleToWindowsTimeZoneId();
 			SaveScope.Dirty();
 		}
 
@@ -127,7 +163,7 @@ public class TimeZoneRoleData
 			Console.WriteLine($"\"{value.WindowsTimeZoneID}\" was ignored in a role update pass as it already exists.");
 			return;
 		}
-		
+
 #if DEBUG
 		value = AddRole(role, id);
 		Console.WriteLine($"\"{value.WindowsTimeZoneID}\" was added from a pre-existing role, discord role id: \"{id}\".");
@@ -154,12 +190,14 @@ public class TimeZoneRoleData
 		Console.WriteLine($"\"{zone.Id}\" was created, discord role: \"{newRole}\".");
 		return newRole;
 	}
-	
+
 	public TimeZoneRole AddRole(string windowsTimeZoneId, ulong id)
 	{
 		TimeZoneRole value = new TimeZoneRole(id, windowsTimeZoneId);
 		Roles.Add(value);
 		WindowsTimeZoneIdToRole.Add(windowsTimeZoneId, value);
+		if (!RoleToWindowsTimeZoneId.ContainsKey(id))
+			RoleToWindowsTimeZoneId.Add(id, value);
 		SaveScope.Dirty();
 		return value;
 	}

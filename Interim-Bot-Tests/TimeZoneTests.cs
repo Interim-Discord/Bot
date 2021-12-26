@@ -43,9 +43,8 @@ public class TimeZoneTests
 	public void ValidateTimeZoneCounts()
 	{
 		using var scope = new AssertionScope();
-		foreach (KeyValuePair<string, LocalGroup> group in TimeZoneLookup.Groups)
+		foreach ((_, LocalGroup localGroup) in TimeZoneLookup.Groups)
 		{
-			LocalGroup localGroup = group.Value;
 			localGroup.Locales.Length.Should().BeLessThanOrEqualTo(5);
 			switch (localGroup.Mode)
 			{
