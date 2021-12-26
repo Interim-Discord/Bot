@@ -20,10 +20,11 @@ public class ThreadStartedDeleter : FeatureSingleton<ThreadStartedDeleter>
 	{
 		if (!enabledServers.Contains(e.Guild.Id)) return Task.CompletedTask;
 		if (e.Message.MessageType != (MessageType)18) return Task.CompletedTask;
-		return DeleteThreadIfRequired(sender, e);
+		Task.Run(() => DeleteThreadIfRequired(sender, e));
+		return Task.CompletedTask;
 	}
 
-	private async Task DeleteThreadIfRequired(DiscordClient sender, MessageCreateEventArgs e)
+	private static async Task DeleteThreadIfRequired(DiscordClient sender, MessageCreateEventArgs e)
 	{
 		// Get the referenced channel id from this thread created message.
 		object value = typeof(DiscordMessage).GetProperty("InternalReference", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(e.Message)!;

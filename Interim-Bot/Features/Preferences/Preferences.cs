@@ -38,6 +38,8 @@ public class Preferences : FeatureSingleton<Preferences>
 
 	public override async Task InitialiseAsync(DiscordClient discord)
 	{
+		Console.WriteLine($"Save location: \"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\".");
+
 		List<Task> tasks = new();
 		string path = Constants.ApplicationDirectoryPath;
 		Directory.CreateDirectory(path);

@@ -8,7 +8,7 @@ public class CollapsedTimeZones
 	public HashSet<string>[] ZoneGroups { get; }
 
 	static CollapsedTimeZones() => Instance = new CollapsedTimeZones();
-
+	
 	private CollapsedTimeZones()
 	{
 		ReadOnlyCollection<TimeZoneInfo> zones = TimeZoneInfo.GetSystemTimeZones();

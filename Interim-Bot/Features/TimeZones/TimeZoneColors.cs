@@ -61,7 +61,7 @@ public static class TimeZoneColors
 		new(98, 106, 255), // 11:00
 		new(122, 118, 255) // 11:30
 	};
-	
+
 	public static DiscordColor GetColor(TimeOnly time)
 	{
 		int index = time.Hour * 2;

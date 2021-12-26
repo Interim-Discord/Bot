@@ -25,7 +25,8 @@ public class TimeZoneRoles : FeatureSingleton<TimeZoneRoles>, IComponentInteract
 
 	public override async Task InitialiseAsync(DiscordClient discord)
 	{
-		TZConvert.IanaToWindows("Etc/UTC"); // This call is purely to initialise the static members of TZConvert.
+		_ = TZConvert.IanaToWindows("Etc/UTC"); // Call to initialise TZConvert.
+		_ = CollapsedTimeZones.Instance; // Call to initialise CollapsedTimeZones.
 
 		_discordClient = discord;
 		List<Task> tasks = new();
@@ -286,23 +287,23 @@ public class TimeZoneRoles : FeatureSingleton<TimeZoneRoles>, IComponentInteract
 		foreach ((ulong guildId, TimeZoneRoleData roleData) in pairs)
 		{
 			if (!_discordClient!.Guilds.TryGetValue(guildId, out var guild)) continue;
-			if (roleData.RoleToWindowsTimeZoneId.Count == 0) continue;
+			if (roleData.Roles.Count == 0) continue;
 			bool colored = Preferences.Preferences.Instance.IsTimeZoneColorsEnabled(guildId);
 			text.AppendLine($"Updating roles in {guild.Name}:");
-			foreach ((ulong roleId, TimeZoneRole role) in roleData.RoleToWindowsTimeZoneId)
+			foreach (var role in roleData.Roles)
 			{
-				if (!guild.Roles.TryGetValue(roleId, out var discordRole)) continue;
+				if (!guild.Roles.TryGetValue(role.ID, out var discordRole)) continue;
 				string name = role.TimeZoneInfo.ToNowAmPmString(now, out DateTime converted);
 				if (!force && discordRole.Name == name) continue;
 				if (colored)
 				{
 					DiscordColor colour = TimeZoneColors.GetColor(TimeOnly.FromDateTime(converted));
-					text.AppendLine($"\tUpdating {discordRole.Name} ({roleId}) to {name} : {colour}.");
+					text.AppendLine($"\tUpdating {discordRole.Name} ({role.ID}) to {name} : {colour}.");
 					modifications.Add(discordRole.ModifyAsync(name, color: colour));
 				}
 				else
 				{
-					text.AppendLine($"\tUpdating {discordRole.Name} ({roleId}) to {name}.");
+					text.AppendLine($"\tUpdating {discordRole.Name} ({role.ID}) to {name}.");
 					modifications.Add(discordRole.ModifyAsync(name));
 				}
 			}
@@ -319,9 +320,9 @@ public class TimeZoneRoles : FeatureSingleton<TimeZoneRoles>, IComponentInteract
 		if (!_discordClient!.Guilds.TryGetValue(guildId, out var guild)) return Task.CompletedTask;
 		bool colored = Preferences.Preferences.Instance.IsTimeZoneColorsEnabled(guildId);
 		List<Task> modifications = new List<Task>();
-		foreach ((ulong roleId, TimeZoneRole role) in roleData.RoleToWindowsTimeZoneId)
+		foreach (var role in roleData.Roles)
 		{
-			if (!guild.Roles.TryGetValue(roleId, out var discordRole)) continue;
+			if (!guild.Roles.TryGetValue(role.ID, out var discordRole)) continue;
 			string name = role.TimeZoneInfo.ToNowAmPmString(now, out DateTime converted);
 			if (!force && discordRole.Name == name) continue;
 			modifications.Add(!colored ? discordRole.ModifyAsync(name) : discordRole.ModifyAsync(name, color: TimeZoneColors.GetColor(TimeOnly.FromDateTime(converted))));
@@ -357,6 +358,7 @@ public class TimeZoneRoles : FeatureSingleton<TimeZoneRoles>, IComponentInteract
 	private async ValueTask<DiscordRole> GetRoleAsync(DiscordGuild guild, TimeZoneInfo timeZoneInfo)
 	{
 		ulong guildId = guild.Id;
+		// Get the role data associated with the guild.
 		if (!GuildToRoleData.TryGetValue(guildId, out TimeZoneRoleData? roleData))
 			roleData = await LoadAsync(guildId);
 
