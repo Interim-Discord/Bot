@@ -29,7 +29,7 @@ class Program
 		});
 
 		await discord.ConnectAsync();
-		await InitialiseAsync(discord);
+		await InitialiseAsync(discord, new BackgroundTaskQueue(5));
 
 		var commands = discord.UseCommandsNext(new CommandsNextConfiguration
 		{

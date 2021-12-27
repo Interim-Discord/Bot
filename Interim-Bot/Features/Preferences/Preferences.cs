@@ -36,7 +36,7 @@ public class Preferences : FeatureSingleton<Preferences>
 		return data;
 	}
 
-	public override async Task InitialiseAsync(DiscordClient discord)
+	public override async Task InitialiseAsync(DiscordClient discord, IBackgroundTaskQueue taskQueue)
 	{
 		Console.WriteLine($"Save location: \"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\".");
 

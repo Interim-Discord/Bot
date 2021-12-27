@@ -8,18 +8,22 @@ namespace Interim.Features;
 
 public static class Features
 {
+	private static QueuedHostedService? hostingService;
 	private static IEnumerable<IFeature> Instances => new List<IFeature>
 	{
 		TimeZoneRoles.Instance,
 		ThreadStartedDeleter.Instance
 	};
 
-	public static async Task InitialiseAsync(DiscordClient discord)
+	public static async Task InitialiseAsync(DiscordClient discord, IBackgroundTaskQueue taskQueue)
 	{
+		hostingService = new QueuedHostedService(taskQueue);
+		await Task.Run(() => hostingService.StartAsync(CancellationToken.None));
+		
 		// Initialise preferences before other features.
-		await Preferences.Preferences.Instance.InitialiseAsync(discord);
+		await Preferences.Preferences.Instance.InitialiseAsync(discord, taskQueue);
 		// Initialise remaining features.
-		await Task.WhenAll(Instances.Select(instance => instance.InitialiseAsync(discord)));
+		await Task.WhenAll(Instances.Select(instance => instance.InitialiseAsync(discord, taskQueue)));
 		discord.ComponentInteractionCreated += OnComponentInteractionCreated;
 	}
 

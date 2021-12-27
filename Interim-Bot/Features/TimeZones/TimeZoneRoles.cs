@@ -23,7 +23,7 @@ public class TimeZoneRoles : FeatureSingleton<TimeZoneRoles>, IComponentInteract
 		return data;
 	}
 
-	public override async Task InitialiseAsync(DiscordClient discord)
+	public override async Task InitialiseAsync(DiscordClient discord, IBackgroundTaskQueue taskQueue)
 	{
 		_ = TZConvert.IanaToWindows("Etc/UTC"); // Call to initialise TZConvert.
 		_ = CollapsedTimeZones.Instance; // Call to initialise CollapsedTimeZones.

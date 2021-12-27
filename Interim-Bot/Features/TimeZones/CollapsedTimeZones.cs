@@ -27,9 +27,7 @@ public class CollapsedTimeZones
 			if (sameZone == null)
 				processedZones.Add(zone, new HashSet<string> { zone.Id });
 			else
-			{
 				processedZones[sameZone].Add(zone.Id);
-			}
 		}
 
 		ZoneGroups = processedZones.Values.ToArray();
